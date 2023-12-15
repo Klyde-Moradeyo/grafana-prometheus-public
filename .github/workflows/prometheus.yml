@@ -1,0 +1,57 @@
+name: CD Prometheus Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+    - "prometheus/**"
+    - ".github/workflows/prometheus.yml"
+  workflow_dispatch:
+  
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+          
+      - name: Set up FLY CTL
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Set Flyctl Secrets
+        working-directory: ./prometheus
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          echo "here i would use secrets"
+
+      - name: Insert Promtheus Credentials
+        working-directory: ./prometheus
+        run: |
+          if [ -f prometheus.yml ]; then
+            sed -i 's/PROMETHEUS_USERNAME/'"${{ secrets.PROMETHEUS_USERNAME }}"'/g' prometheus.yml
+            sed -i 's/PROMETHEUS_PASSWORD/'"${{ secrets.PROMETHEUS_PASSWORD }}"'/g' prometheus.yml
+          else
+            echo "prometheus.yml not found, the script cannot continue."
+            exit 1
+          fi
+
+      - name: Deploy prometheus Server
+        working-directory: ./prometheus
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  
+        run: |
+          flyctl deploy --remote-only
+
+  git-tag:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github-workflows
+    needs: deploy
+    with:
+      git_tag_prefix: "PROM"
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}

@@ -1,0 +1,55 @@
+name: CD Grafana Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+    - "grafana/**"
+    - ".github/workflows/grafana.yml"
+  workflow_dispatch:
+  
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+          
+      - name: Set up FLY CTL
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Set Flyctl Secrets
+        working-directory: ./grafana
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl secrets set \
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            GF_SECURITY_SECRET_KEY=${{ secrets.GF_SECURITY_SECRET_KEY }}
+
+      - name: Wait 30 sec
+        run: sleep 30
+      
+      - name: Deploy grafana Server
+        working-directory: ./grafana
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  
+        run: |
+          flyctl deploy --remote-only
+
+          # Scale Machines to 1
+          flyctl scale count 1 -y
+
+  git-tag:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github-workflows
+    needs: deploy
+    with:
+      git_tag_prefix: "GRAFANA"
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
