@@ -1,0 +1,42 @@
+# General
+*.log
+*.out
+*.pid
+*.tar.gz
+*.gz
+*.swp
+.DS_Store
+.idea/
+.vscode/
+*~
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+
+# Prometheus
+prometheus/data/*
+prometheus/*.db
+prometheus/*.log
+prometheus/alertmanager/*.log
+prometheus/alertmanager/data/*
+prometheus/*.tsdb
+
+# Grafana
+grafana/data/*
+grafana/logs/*
+grafana/plugins/*
+!grafana/plugins/README.md
+grafana/*.log
+grafana/conf/ldap.toml
+secret_key.txt
+
+# Add exceptions for sample config files
+!prometheus/prometheus.example.yml
+!prometheus/alertmanager/config.example.yml
+!grafana/conf/sample.ini
+
+# Docker
+docker-compose.yml
