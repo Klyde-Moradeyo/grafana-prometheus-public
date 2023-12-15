@@ -1,0 +1,59 @@
+# my global config
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - localhost:9093
+
+# Load rules once and periodically evaluate them according to the global "evaluation_interval".
+# rule_files:
+#   - "rules/myrules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it"s Prometheus itself.
+scrape_configs:
+  ########################
+  #     EC2 instance     #
+  ########################
+  # Node Exporter
+  - job_name: "ec2-instance-node-exporter"
+    scheme: http
+    static_configs:
+      - targets: ["<placeholder_ip>:9100"]
+
+  # Process Exporter
+  - job_name: "ec2-instance-process-exporter"
+    scheme: http
+    static_configs:
+      - targets: ["<placeholder_ip>:9256"]
+
+  # cAdvisor
+  - job_name: "ec2-instance-cadvsior"
+    scheme: http
+    static_configs:
+      - targets: ["<placeholder_ip>:9149"]
+
+  ########################
+  #        Grafana       #
+  ########################
+  - job_name: "grafana"
+    scheme: https
+    static_configs:
+      - targets: ["<placeholder_grafana_host_name>"]
+      
+  ########################
+  #       Prometheus     #
+  ########################
+  - job_name: "prometheus"
+    basic_auth:
+      username: "PROMETHEUS_USERNAME"
+      password: "PROMETHEUS_PASSWORD"
+    static_configs:
+      - targets: ["localhost:9090"]
